@@ -11,9 +11,12 @@ class DronetTorch(nn.Module):
         Define model architecture.
         
         # Arguments
-        img_dim: image dimensions.
-        img_channels: Target image channels.
-        output_dim: Dimension of model output.
+
+        `img_dim`: image dimensions.
+
+        `img_channels`: Target image channels.
+
+        `output_dim`: Dimension of model output.
 
         """
         super(DronetTorch, self).__init__()
@@ -54,6 +57,8 @@ class DronetTorch(nn.Module):
         self.linear2 = nn.Linear(6272, output_dim)
         self.sigmoid1 = nn.Sigmoid()
         self.init_weights()
+
+        
 
     def init_weights(self):
         torch.nn.init.kaiming_normal_(self.conv_modules[1].weight)

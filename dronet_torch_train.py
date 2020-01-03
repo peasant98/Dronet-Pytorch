@@ -9,8 +9,18 @@ import torch
 # import log_utils
 
 
-def train():
-    dronet 
+def train(img_dim, img_channels, output_channels, weights_path=None):
+    # create dronet model
+    dronet = dronet_torch.DronetTorch(img_dim, img_channels, output_channels)
+
+    if weights_path != None:
+        try:
+            dronet.load_state_dict(torch.load(weights_path))
+        except:
+            print('Invalid weights path')
+    else:
+        print('No weights path found, model is untrained.')
+    
 
 def getData():
     pass
@@ -40,7 +50,7 @@ def getModel(img_dims, img_channels, output_dim, weights_path):
 
     return model
 
-def trainModel(train_data_loader, val_data_loader, model, initial_epoch):
+def trainModel(train_data_loader, val_data_loader, model, epochs, steps_save):
     '''
     trains the model.
 
@@ -51,13 +61,26 @@ def trainModel(train_data_loader, val_data_loader, model, initial_epoch):
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
     
 
-    # save model
-    weights_path = os.path.join(FLAGS.experiment_rootdir, 'weights_{epoch:03d}.pth')
-    model.save(model.state_dict(), weights_path)
-    
-    # Save model every 'log_rate' epochs.
-    # Save training and validation losses.s
-    
+    for epoch in range(epochs):
+        # rip through the dataset
+        # get data
+        data = torch.ones([3,224,224]).float().cuda()
+
+        if epoch % steps_save == 0:
+            # save model
+            weights_path = os.path.join('checkpoints', 'weights_{epoch:03d}.pth')
+            torch.save(model.state_dict(), weights_path)
+
+        
+        # evaluate on validation set
+        # 
+        # Save training and validation losses.s
+
+def testModel(model, test_data_loader):
+    '''
+    tests the model
+    '''
+    pass
 
 
 def main(argv):
