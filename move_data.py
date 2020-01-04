@@ -48,11 +48,14 @@ def move_img(df, data_group, udacity_data_path_folder='output', main_data_file_p
     arr = np.zeros(len(df))
     for ind,filename in enumerate(df['filename'].values):
         # get initial filename
+        # name by ind
+        # example filename is images/341401.jpg
+        # rename to images/{ind}.jpg
+        new_filename = os.path.join('images', '{}.jpg'.format(ind))
         fname = os.path.join(udacity_data_path_folder, filename)
         # move to main data folder
 
-        print(os.path.join(main_data_file_path, data_group, udacity_name,filename))
-        os.rename(fname, os.path.join(main_data_file_path, data_group, udacity_name, filename))
+        os.rename(fname, os.path.join(main_data_file_path, data_group, udacity_name, new_filename))
         # add to file
         angle = df['angle'].values[ind]
         arr[ind] = angle

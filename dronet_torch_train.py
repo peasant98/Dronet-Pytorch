@@ -23,6 +23,7 @@ def train(img_dim, img_channels, output_channels, weights_path=None):
     
 
 def getData():
+    # get the correct data from the dataloader.
     pass
 
 
