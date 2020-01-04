@@ -41,6 +41,9 @@ def getSyncSteering(fname, idx):
 
 
 
+# get all of the images, all in one file
+
+
 # For every bag...
 for exp in experiments:
     # Read images
