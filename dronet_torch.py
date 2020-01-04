@@ -57,6 +57,7 @@ class DronetTorch(nn.Module):
         self.linear2 = nn.Linear(6272, output_dim)
         self.sigmoid1 = nn.Sigmoid()
         self.init_weights()
+        self.decay = 0.1
 
         
 
@@ -106,11 +107,11 @@ class DronetTorch(nn.Module):
 
         return steer, collision
 
-    def loss(self, k, y_true, y_pred):
+    def loss(self, k, steer_true, steer_pred, coll_true, coll_pred):
         # for steering angle
-        mse_loss = self.alpha * (self.hard_mining_mse(k, y_true, y_pred))
+        mse_loss = self.alpha * (self.hard_mining_mse(k, steer_true, steer_pred))
         # for collision probability
-        bce_loss = self.beta * (self.hard_mining_entropy(k, y_true, y_pred))
+        bce_loss = self.beta * (self.hard_mining_entropy(k, coll_true, coll_pred))
         return mse_loss + bce_loss
 
     def hard_mining_mse(self, k, y_true, y_pred):

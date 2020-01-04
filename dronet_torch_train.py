@@ -50,7 +50,8 @@ def getModel(img_dims, img_channels, output_dim, weights_path):
 
     return model
 
-def trainModel(train_data_loader, val_data_loader, model, epochs, steps_save):
+def trainModel(train_data_loader, val_data_loader, model: dronet_torch.DronetTorch, 
+                epochs, steps_save):
     '''
     trains the model.
 
@@ -60,11 +61,24 @@ def trainModel(train_data_loader, val_data_loader, model, epochs, steps_save):
     '''
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
     
-
+    k = 1000
     for epoch in range(epochs):
         # rip through the dataset
         # get data
         data = torch.ones([3,224,224]).float().cuda()
+        # run model
+        steer_true, coll_true = np.array([1,1,1]), np.array([1,1,1])
+        steer_pred, coll_pred = model(data)
+        # Ltot=LMSE+max(0,1−exp−decay(epoch−epoch0))
+        other_val = (1 - torch.exp(torch.Tensor(-1*model.decay*(epoch-10)))).float().cuda()
+        model.beta = torch.max(torch.Tensor([0]).float().cuda(), other_val)
+        # get loss, perform hard mining
+        loss = model.loss(k, steer_true, steer_pred, coll_true, coll_pred)
+        # backpropagate loss
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
 
         if epoch % steps_save == 0:
             # save model
