@@ -10,7 +10,7 @@ class DronetTorch(nn.Module):
         """
         Define model architecture.
         
-        # Arguments
+        ## Arguments
 
         `img_dim`: image dimensions.
 

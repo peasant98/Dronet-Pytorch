@@ -1,3 +1,7 @@
 settings.json
 output/
 out/*
+all-data/*
+data/*
+udacity-driving-reader/*
+*.jpg
