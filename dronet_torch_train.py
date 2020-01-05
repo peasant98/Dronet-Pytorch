@@ -60,8 +60,9 @@ def trainModel(train_data_loader, val_data_loader, model: dronet_torch.DronetTor
     
 
     '''
+    # adam optimizer with weight decay
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
-    
+    # value of k for hard mining
     k = 1000
     for epoch in range(epochs):
         # rip through the dataset
@@ -70,7 +71,14 @@ def trainModel(train_data_loader, val_data_loader, model: dronet_torch.DronetTor
         # run model
         steer_true, coll_true = np.array([1,1,1]), np.array([1,1,1])
         steer_pred, coll_pred = model(data)
+
+        # crop the images
+        # batch size is important
+        # data augmentation
+
+
         # Ltot=LMSE+max(0,1−exp−decay(epoch−epoch0))
+        # scale the weights on the loss
         other_val = (1 - torch.exp(torch.Tensor(-1*model.decay*(epoch-10)))).float().cuda()
         model.beta = torch.max(torch.Tensor([0]).float().cuda(), other_val)
         # get loss, perform hard mining
@@ -90,11 +98,15 @@ def trainModel(train_data_loader, val_data_loader, model: dronet_torch.DronetTor
         # evaluate on validation set
         # 
         # Save training and validation losses.s
+    # save final results
+    weights_path = os.path.join('models', 'dronet_trained.pth')
+    torch.save(model.state_dict(), weights_path)
 
 def testModel(model, test_data_loader):
     '''
     tests the model
     '''
+    # go through dataset, run the trained (hopefully) model.
     pass
 
 

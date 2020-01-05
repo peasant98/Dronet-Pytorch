@@ -3,12 +3,26 @@ import numpy as np
 import os
 from PIL import Image
 import matplotlib.pyplot as plt
+from torchvision import transforms, utils
+import torchvision.transforms.functional as TF
 
 class DronetDataset(torch.utils.data.Dataset):
-    def __init__(self, root_dir, data_group, transform=None):
+    def __init__(self, root_dir, data_group, augmentation=False, grayscale=False):
         super(DronetDataset, self).__init__()
         self.root_dir = root_dir
-        self.transform = transform
+        self.transforms_list = []
+        if augmentation:
+            self.transforms_list = [
+                transforms.RandomResizedCrop(224),
+                # this is a good one, changes
+                transforms.ColorJitter(brightness=(0.5,1), contrast=(0.5,1), saturation=(0.7,1)),
+                transforms.RandomGrayscale(),
+            ]
+        if grayscale:
+            self.transforms_list.append(transforms.Grayscale())
+        # create list of transforms to apply to image
+        self.transform = transforms.Compose(self.transforms_list)
+        self.to_tensor = transforms.Compose([transforms.ToTensor()])
         self.data_group = data_group
         # get the list of all of the files
         self.main_dir = os.path.join(self.root_dir, self.data_group)
@@ -52,7 +66,6 @@ class DronetDataset(torch.utils.data.Dataset):
         # the resulting list should have all of the paths to the filenames from 
         # self.main_dir
         # go through each folder and get the length
-        print(img_path_list[:10])
         self.all_img_tuples = img_path_list
     
     def __len__(self):
@@ -84,14 +97,18 @@ class DronetDataset(torch.utils.data.Dataset):
         # get the image
         print('Image path: {}'.format(item[0]))
         image = Image.open(item[0]) 
-        if self.transform:
+        # data augmentation, can return multiple copies too
+        if self.transform != []:
             image = self.transform(image)
         plt.imshow(image)
         plt.title('Steering: {} Collision: {}'.format(target_steer, target_coll))
         plt.show()
-        return image, target_steer, target_coll
+        image_tensor = self.to_tensor(image)
+        return image_tensor.shape, target_steer, target_coll
 
-dataset = DronetDataset('all-data', 'training')
+
+dataset = DronetDataset('all-data', 'training', True)
 print(len(dataset))
-rand_value = np.random.randint(0, len(dataset))
-print(dataset[rand_value])
+for i in range(100):
+    rand_value = np.random.randint(0, len(dataset))
+    print(dataset[rand_value])
