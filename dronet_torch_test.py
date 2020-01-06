@@ -5,7 +5,23 @@ import sklearn
 
 def testModel(model: torch.nn.Module, weights_path=None):
     '''
-    tests the model
+    tests the model with the following metrics:
+
+    root mean square error (RMSE) for steering angle.
+
+    expected variance for steering angle.
+
+    accuracy % for probability of collision.
+
+    f1 score for probability of collision.
+
+    ## parameters
+
+    `model`: `torch.nn.Module`: the dronet model.
+
+    `weights_path`: `str`: the path to the file to get
+    the weights from the trained model. No use in keeping it at the default of `None`,
+    and having (very, very, very likely) horrible metrics.
     '''
     # go through dataset, run the trained (hopefully) model from path
     if weights_path != None:
