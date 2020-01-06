@@ -46,7 +46,7 @@ def getModel(img_dims, img_channels, output_dim, weights_path):
 
     return model
 
-def trainModel( model: dronet_torch.DronetTorch, 
+def trainModel(model: dronet_torch.DronetTorch, 
                 epochs, batch_size, steps_save):
     '''
     trains the model.
@@ -92,7 +92,15 @@ def trainModel( model: dronet_torch.DronetTorch,
             optimizer.zero_grad()
 
         if epoch % steps_save == 0:
-            # save model
+            # save model and run validation
+
+
+            # for (img, steer_true, coll_true) in validation_dataloader:
+            #     img_cuda = img.float().cuda()
+            #     steer_pred, coll_pred = model(img_cuda)
+            #     loss = model.loss(k, steer_true, steer_pred, coll_true, coll_pred)
+
+
             weights_path = os.path.join('checkpoints', 'weights_{epoch:03d}.pth')
             torch.save(model.state_dict(), weights_path)
         # evaluate on validation set

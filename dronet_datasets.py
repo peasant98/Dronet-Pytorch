@@ -138,8 +138,9 @@ print(len(dataset))
 
 
 
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=True, num_workers=2)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 for i, sample in enumerate(dataloader):
     print(i)
-    print(sample[1], sample[2])
+    print(sample[1].numpy(), sample[2])
+    print(sample[2].shape)
     break

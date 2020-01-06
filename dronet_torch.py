@@ -61,6 +61,13 @@ class DronetTorch(nn.Module):
         
 
     def init_weights(self):
+        '''
+        intializes weights according to He initialization.
+
+        ## parameters
+
+        None
+        '''
         torch.nn.init.kaiming_normal_(self.conv_modules[1].weight)
         torch.nn.init.kaiming_normal_(self.conv_modules[2].weight)
 
@@ -70,9 +77,13 @@ class DronetTorch(nn.Module):
         torch.nn.init.kaiming_normal_(self.conv_modules[7].weight)
         torch.nn.init.kaiming_normal_(self.conv_modules[8].weight)
 
-    def forward(self, x, targets=None):
+    def forward(self, x):
         '''
         forward pass of dronet
+        
+        ## parameters
+
+        `x`: `Tensor`: The provided input tensor`
         '''
         bn_idx = 0
         conv_idx = 1
@@ -107,8 +118,29 @@ class DronetTorch(nn.Module):
         return steer, collision
 
     def loss(self, k, steer_true, steer_pred, coll_true, coll_pred):
+        '''
+        loss function for dronet. Is a weighted sum of hard mined mean square
+        error and hard mined binary cross entropy.
+
+        ## parameters
+
+        `k`: `int`: the value for hard mining; the `k` highest losses will be learned first,
+        and the others ignored.
+
+        `steer_true`: `Tensor`: the torch tensor for the true steering angles. Is of shape
+        `(N,1)`, where `N` is the amount of samples in the batch.
+
+        `steer_pred`: `Tensor`: the torch tensor for the predicted steering angles. Also is of shape
+        `(N,1)`.
+
+        `coll_true`: `Tensor`: the torch tensor for the true probabilities of collision. Is of 
+        shape `(N,1)`
+
+        `coll_pred`: `Tensor`: the torch tensor for the predicted probabilities of collision.
+        Is of shape `(N,1)`
+        '''
         # for steering angle
-        mse_loss = (self.hard_mining_mse(k, steer_true, steer_pred))
+        mse_loss = self.hard_mining_mse(k, steer_true, steer_pred)
         # for collision probability
         bce_loss = self.beta * (self.hard_mining_entropy(k, coll_true, coll_pred))
         return mse_loss + bce_loss
