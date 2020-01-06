@@ -24,7 +24,6 @@ class DronetTorch(nn.Module):
         self.channels = img_channels
         self.output_dim = output_dim
         self.conv_modules = nn.ModuleList()
-        self.alpha = torch.Tensor([1]).float()
         self.beta = torch.Tensor([0]).float()
 
         # Initialize number of samples for hard-mining
@@ -109,7 +108,7 @@ class DronetTorch(nn.Module):
 
     def loss(self, k, steer_true, steer_pred, coll_true, coll_pred):
         # for steering angle
-        mse_loss = self.alpha * (self.hard_mining_mse(k, steer_true, steer_pred))
+        mse_loss = (self.hard_mining_mse(k, steer_true, steer_pred))
         # for collision probability
         bce_loss = self.beta * (self.hard_mining_entropy(k, coll_true, coll_pred))
         return mse_loss + bce_loss
@@ -122,29 +121,22 @@ class DronetTorch(nn.Module):
         ### parameters
         
         `k`: `int`: number of samples for hard-mining
+
+        `y_true`: `Tensor`: torch Tensor of the expected steering angles.
+        
+        `y_pred`: `Tensor`: torch Tensor of the predicted steering angles.
         '''
-        # Parameter t indicates the type of experiment
-        t = y_true[:,0]
-        # no. of steering samples
-        samples_steer = torch.eq(t,1).int()
-        n_samples_steer = torch.sum(samples_steer)
-        if n_samples_steer == 0:
-            return 0.
-        else:
-            # predicted and real steerings
-            pred_steer = torch.squeeze(y_pred, -1)
-            true_steer = y_true[:,1]
-            # steering loss
-            loss_steer = torch.mul(t, (pred_steer - true_steer)**2)
+        loss_steer = (y_true - y_pred)**2
 
-            # hard mining
-            k_min = torch.min(k, n_samples_steer)
-            _, indices = torch.topk(loss_steer, k=k_min)
-
-            max_loss_steer = torch.gather(loss_steer, dim=1, index=indices)
-
-            hard_loss_steer = torch.div(torch.sum(max_loss_steer), k.float())
-            return hard_loss_steer
+        # hard mining        
+        # get value of k that is minimum of batch size or the selected value of k
+        k_min = min(k, y_true.shape[0])
+        _, indices = torch.topk(loss_steer, k=k_min, dim=0)
+        max_loss_steer = torch.gather(loss_steer, dim=0, index=indices)
+        # mean square error
+        hard_loss_steer = torch.div(torch.sum(max_loss_steer), k_min)
+        return hard_loss_steer
+        
 
     def hard_mining_entropy(self, k, y_true, y_pred):
         '''
@@ -152,34 +144,25 @@ class DronetTorch(nn.Module):
 
         ## parameters
 
-        `k`: number of samples for hard-mining
+        `k`: `int`: number of samples for hard-mining
+
+        `y_true`: `Tensor`: torch Tensor of the expected probabilities of collision.
+
+        `y_pred`: `Tensor`: torch Tensor of the predicted probabilities of collision.
         '''
-        # parameter indicates the type of experiment
-        t = y_true[:,0]
 
-        # number of collision samples
-        samples_coll = torch.eq(t,0).int()
-        n_samples_coll = torch.sum(samples_coll)
-
-        if n_samples_coll == 0:
-            return 0.
-        else:
-            # predicted and real labels
-            pred_coll = torch.squeeze(y_pred, -1)
-            true_coll = y_true[:,1]
-            # collision loss
-            loss_coll = torch.mul((1-t), F.binary_cross_entropy(pred_coll, true_coll))
-            # hard mining
-            k_min = torch.min(k, n_samples_coll)
-            _, indices = torch.topk(loss_coll, k=k_min)
-            max_loss_coll = torch.gather(loss_coll, dim=1, index=indices)
-            hard_loss_coll = torch.div(torch.sum(max_loss_coll), k.float())
-            return hard_loss_coll
+        loss_coll = F.binary_cross_entropy(y_pred, y_true, reduction='none')
+        k_min = min(k, y_true.shape[0])
+        _, indices = torch.topk(loss_coll, k=k_min, dim=0)
+        max_loss_coll = torch.gather(loss_coll, dim=0, index=indices)
+        hard_loss_coll = torch.div(torch.sum(max_loss_coll), k_min)
+        return hard_loss_coll
 
 
 # one dim for steering angle, another for prob. of collision
 dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
 dronet.cuda()
-m = torch.ones((1,3, 224, 224)).cuda()
-res = dronet(m)
-print(res)
+steer_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
+coll_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
+m = torch.ones((4,3, 224, 224)).cuda()
+steer_pred, coll_pred = dronet(m)
