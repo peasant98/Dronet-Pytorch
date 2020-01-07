@@ -2,7 +2,6 @@ import torch
 from dronet_datasets import DronetDataset
 import sklearn
 
-
 def testModel(model: torch.nn.Module, weights_path=None):
     '''
     tests the model with the following metrics:
@@ -102,6 +101,3 @@ def testModel(model: torch.nn.Module, weights_path=None):
     print('--------------------------')
     print('F1 Score', f1_score.item())
     print('**************************')
-
-
-    
