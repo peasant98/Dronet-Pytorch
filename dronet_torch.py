@@ -20,16 +20,19 @@ class DronetTorch(nn.Module):
 
         """
         super(DronetTorch, self).__init__()
+
+        # get the device
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
         self.img_dims = img_dims
         self.channels = img_channels
         self.output_dim = output_dim
         self.conv_modules = nn.ModuleList()
-        self.beta = torch.Tensor([0]).float()
+        self.beta = torch.Tensor([0]).float().to(self.device)
 
         # Initialize number of samples for hard-mining
-        self.k_mse = torch.Tensor([2]).int()
-        self.k_entrpoy = torch.Tensor([2]).int()
-
 
         self.conv_modules.append(nn.Conv2d(self.channels, 32, (5,5), stride=(2,2), padding=(2,2)))
         filter_amt = np.array([32,64,128])
@@ -192,9 +195,9 @@ class DronetTorch(nn.Module):
 
 
 # one dim for steering angle, another for prob. of collision
-dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
-dronet.cuda()
-steer_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
-coll_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
-m = torch.ones((4,3, 224, 224)).cuda()
-steer_pred, coll_pred = dronet(m)
+# dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
+# dronet.cuda()
+# steer_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
+# coll_true = torch.Tensor([[0.1], [0.1], [0.1], [0.1]]).cuda()
+# m = torch.ones((4,3, 224, 224)).cuda()
+# steer_pred, coll_pred = dronet(m)

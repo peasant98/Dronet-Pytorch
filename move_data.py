@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 import os
 import pandas as pd
@@ -38,9 +37,8 @@ def rand_split(data_path_folder):
     test.to_csv('test_steer.csv')
     return train, valid, test
 
-# rand_split('output')
 
-def move_img(df, data_group, udacity_data_path_folder='output', main_data_file_path='all-data'):
+def move_img(df, data_group, udacity_data_path_folder='out', main_data_file_path='data/collision/collision_dataset'):
     '''
     moves the image and adds to steering.txt in order.
     '''
@@ -53,8 +51,8 @@ def move_img(df, data_group, udacity_data_path_folder='output', main_data_file_p
         # rename to images/{ind}.jpg
         new_filename = os.path.join('images', '{}.jpg'.format(ind))
         fname = os.path.join(udacity_data_path_folder, filename)
+        print(os.path.join(main_data_file_path, data_group, udacity_name, new_filename))
         # move to main data folder
-
         os.rename(fname, os.path.join(main_data_file_path, data_group, udacity_name, new_filename))
         # add to file
         angle = df['angle'].values[ind]
@@ -64,8 +62,8 @@ def move_img(df, data_group, udacity_data_path_folder='output', main_data_file_p
     os.rename(steering_fname, os.path.join(main_data_file_path, data_group, udacity_name, steering_fname))
 
 if __name__ == '__main__':
-    train_df, valid_df, test_df = rand_split('output')
-    print(train_df.head(), valid_df.head())
+    train_df, valid_df, test_df = rand_split('out')
+    print(train_df.head(), valid_df.head(), test_df.head())
     move_img(train_df, 'training')
     move_img(valid_df, 'validation')
     move_img(test_df, 'testing')
