@@ -112,4 +112,4 @@ def trainModel(model: dronet_torch.DronetTorch,
 if __name__ == "__main__":
     dronet = getModel((224,224), 3, 1, None)
     print(dronet)
-    trainModel(dronet, 256, 8, 5, 4)
+    trainModel(dronet, 256, 16, 5, 8)
