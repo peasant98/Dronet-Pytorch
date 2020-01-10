@@ -1,7 +1,12 @@
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
+import torchvision
+
+import onnx
+import onnx_tensorrt.backend as backend
 
 
 # dronet implementation in pytorch.
@@ -192,7 +197,35 @@ class DronetTorch(nn.Module):
         max_loss_coll = torch.gather(loss_coll, dim=0, index=indices)
         hard_loss_coll = torch.div(torch.sum(max_loss_coll), k_min)
         return hard_loss_coll
+    
 
+class DronetOnnx():
+    def __init__(self, img_dims, img_channels, output_dim, verbose=False):
+        super(DronetOnnx).__init__()
+        self.dronet = DronetTorch(img_dims, img_channels, output_dim)
+        self.dronet.to(self.dronet.device)
+        inference_shape = (1, img_channels, img_dims[0], img_dims[1])
+        inputs = torch.randn(inference_shape).to(self.dronet.device)
+        torch.onnx.export(self.dronet, inputs, 'dronet.onnx', verbose=verbose,
+                            output_names=['steer', 'coll'])
+    
+    def load_model(self, path):
+        self.model = onnx.load(path)
+        if not torch.cuda.is_available():
+            raise NotImplementedError('TensorRT backend does not work for non-CUDA devices.')
+        # get first gpu
+        self.engine = backend.prepare(self.model, device='CUDA:0')
+
+    def infer(self, data, verbose=False):
+        input_data = data.numpy().astype(np.float32)
+        output_data = self.engine.run(input_data)
+        steer = output_data['steer']
+        coll = output_data['coll']
+        if verbose:
+
+            print(f'Steering Angle: {steer[0]} radians')
+            print(f'Collision Prob: {coll[0]}')
+        return output_data['steer'], output_data['coll']
 
 # one dim for steering angle, another for prob. of collision
 # dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
