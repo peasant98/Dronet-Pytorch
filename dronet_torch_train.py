@@ -49,8 +49,10 @@ def trainModel(model: dronet_torch.DronetTorch,
 
     model.train()
     # create dataloaders for validation and training
-    training_dataset = DronetDataset('data/collision/collision_dataset', 'training', True)
-    validation_dataset = DronetDataset('data/collision/collision_dataset', 'testing', True)
+    training_dataset = DronetDataset('data/collision/collision_dataset', 'training', augmentation=False
+                                        )
+    validation_dataset = DronetDataset('data/collision/collision_dataset', 'validation',
+                                        augmentation=False)
 
     training_dataloader = torch.utils.data.DataLoader(training_dataset, batch_size=batch_size, 
                                             shuffle=True, num_workers=4)
@@ -70,18 +72,17 @@ def trainModel(model: dronet_torch.DronetTorch,
         for batch_idx, (img, steer_true, coll_true) in enumerate(training_dataloader):
             img_cuda = img.float().to(model.device)
             steer_pred, coll_pred = model(img_cuda)
-
             # get loss, perform hard mining
             steer_true = steer_true.to(model.device)
             coll_true  = coll_true.to(model.device)
-
             loss = model.loss(k, steer_true, steer_pred, coll_true, coll_pred)
             # backpropagate loss
             loss.backward()
             # optimizer step
             optimizer.step()
-            # zero gradients to prevent accumulation, for now
+            # zero gradients to prevestepnt accumulation, for now
             optimizer.zero_grad()
+            # print(f'loss: {loss.item()}')
             train_losses.append(loss.item())
             print(f'Training Images Epoch {epoch}: {batch_idx * batch_size}')
         train_loss = np.array(train_losses).mean()
@@ -112,4 +113,4 @@ def trainModel(model: dronet_torch.DronetTorch,
 if __name__ == "__main__":
     dronet = getModel((224,224), 3, 1, None)
     print(dronet)
-    trainModel(dronet, 256, 16, 5, 8)
+    trainModel(dronet, 50, 16, 5, 8)

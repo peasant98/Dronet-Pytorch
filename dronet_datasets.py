@@ -36,7 +36,6 @@ class DronetDataset(torch.utils.data.Dataset):
         self.transforms_list = []
         if augmentation:
             self.transforms_list = [
-                transforms.RandomResizedCrop(224),
                 # this is a good one, changes
                 transforms.ColorJitter(brightness=(0.5,1), contrast=(0.5,1), saturation=(0.7,1)),
                 transforms.RandomGrayscale(),
@@ -45,10 +44,13 @@ class DronetDataset(torch.utils.data.Dataset):
             self.transforms_list.append(transforms.Grayscale())
         # create list of transforms to apply to image
         self.transform = transforms.Compose(self.transforms_list)
-        self.to_tensor = transforms.Compose([
-                        transforms.ToTensor(),
-                        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-                        ])
+        self.to_tensor_list = [
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()
+        ]
+        normalize = transforms.Normalize((0.5,), (0.5,)) if grayscale else transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        self.to_tensor_list.append(normalize)
+        self.to_tensor = transforms.Compose(self.to_tensor_list)
         if data_group not in ['training', 'testing', 'validation']:
             raise ValueError('Invalid data group selection. Choose from training, testing, validation')
         self.data_group = data_group
@@ -131,52 +133,4 @@ class DronetDataset(torch.utils.data.Dataset):
         target_steer = torch.Tensor([target_steer]).float()
         target_coll = torch.Tensor([target_coll]).float()
         return image_tensor, target_steer, target_coll
-
-
-# print(len(dataset))
-# rand_idx = np.random.randint(0, len(dataset))
-# print(dataset[rand_idx])
-
-
-# dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
-# from dronet_torch import DronetTorch
-# dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
-# dronet.to(dronet.device)
-# dronet.train()
-# training_dataset = DronetDataset('data/collision/collision_dataset', 'training', True)
-# validation_dataset = DronetDataset('data/collision/collision_dataset', 'testing', True)
-
-# training_dataloader = torch.utils.data.DataLoader(training_dataset, batch_size=8, 
-#                                         shuffle=True, num_workers=4)
-# validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=2, 
-#                                         shuffle=True, num_workers=1)
-
-
-# optimizer = torch.optim.Adam(dronet.parameters(), lr=1e-4, weight_decay=1e-5)
-# idx=0
-# losses = []
-# for batch_idx, (img, steer_true, coll_true) in enumerate(training_dataloader):
-#     epoch = 0
-#     print(batch_idx)
-#     img_cuda = img.float().to(dronet.device)
-#     steer_pred, coll_pred = dronet(img_cuda)
-#     steer_true = steer_true.to(dronet.device)
-#     coll_true  = coll_true.to(dronet.device)
-#     loss = dronet.loss(8, steer_true, steer_pred, coll_true, coll_pred)
-#     loss.backward()
-#     optimizer.step()
-#     # zero gradients to prevent accumulation, for now
-#     optimizer.zero_grad()
-#     idx+=8
-#     print(f'Loss: {loss.item()}')
-#     losses.append(loss.item())
-#     print(f'Image Count: {idx}')
-
-# weights_path = os.path.join('models', 'dronet_trained.pth')
-# torch.save(dronet.state_dict(), weights_path)
-# plt.plot(losses)
-# plt.show()
-# # need to do:
-# # transfer learning
-# # way to get the data
-# # saving the datas
+        

@@ -1,5 +1,6 @@
 import torch
 from dronet_datasets import DronetDataset
+from dronet_torch import DronetTorch
 import sklearn
 
 def testModel(model: torch.nn.Module, weights_path=None):
@@ -101,3 +102,23 @@ def testModel(model: torch.nn.Module, weights_path=None):
     print('--------------------------')
     print('F1 Score', f1_score.item())
     print('**************************')
+
+# testModel(None, 'models/dronet_trained.pth')
+
+dronet = DronetTorch((224,224), 3, 1)
+
+
+dronet.to(dronet.device)
+dronet.eval()
+dronet.load_state_dict(torch.load('models/weights_000.pth'))
+testing_dataset = DronetDataset('data/collision/collision_dataset', 'training', False, verbose=True,
+                                    )
+testing_dataloader = torch.utils.data.DataLoader(testing_dataset, batch_size=1, 
+                                            shuffle=True, num_workers=1)
+
+for batch in testing_dataloader:
+    img, steer, coll = batch
+    print(img)
+    img_cuda = img.to(dronet.device)
+    steer_pred, coll_pred = dronet(img_cuda)
+    print(f'Dronet predicts {steer_pred.item()} angle and {coll_pred.item()} collision.')

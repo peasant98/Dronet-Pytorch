@@ -222,10 +222,9 @@ class DronetOnnx():
         steer = output_data['steer']
         coll = output_data['coll']
         if verbose:
-
             print(f'Steering Angle: {steer[0]} radians')
             print(f'Collision Prob: {coll[0]}')
-        return output_data['steer'], output_data['coll']
+        return steer, coll
 
 # one dim for steering angle, another for prob. of collision
 # dronet = DronetTorch(img_dims=(224,224), img_channels=3, output_dim=1)
