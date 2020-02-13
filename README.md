@@ -8,4 +8,5 @@ The whole training and testing pipeline is built for Pytorch.
 
 ## Setup
 
+First, you will want to create the correct directories for your work with training, testing, and validation
 make UDACITY_TEST, UDACITY_TRAIN, and UDACITY_VALIDATION folders for the script to run successfully.
