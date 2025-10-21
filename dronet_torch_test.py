@@ -52,8 +52,8 @@ def testModel(model: torch.nn.Module, weights_path=None):
 
         # eva
         # shape is (n,1), will be flatten out
-        cumulative_tensor_true = torch.cat(cumulative_tensor_true, steer_true)
-        cumulative_tensor_pred = torch.cat(cumulative_tensor_pred, steer_pred)
+        cumulative_tensor_true = torch.cat([cumulative_tensor_true, steer_true.cpu()], dim=0)
+        cumulative_tensor_pred = torch.cat([cumulative_tensor_pred, steer_pred.cpu()], dim=0)
 
         # accuracy
         concrete_probs_true = coll_true >= 0.5

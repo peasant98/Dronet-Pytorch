@@ -8,6 +8,11 @@ def plot(path):
 if __name__ == '__main__':
 
     arr = plot('models/losses.txt')
-    plt.plot(arr[::,0])
-    plt.plot(arr[::,1])
+    plt.plot(arr[:,0], label='Training Loss')
+    plt.plot(arr[:,1], label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Losses')
+    plt.legend()
+    plt.grid(True)
     plt.show()
